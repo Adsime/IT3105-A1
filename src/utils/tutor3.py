@@ -68,6 +68,7 @@ class Gann():
         if not(continued): self.error_history = []
         for i in range(epochs):
             error = 0; step = self.global_training_step + i
+            print(step)
             gvars = [self.error] + self.grabvars
             mbs = self.minibatch_size; ncases = len(cases); nmb = math.ceil(ncases/mbs)
             for cstart in range(0,ncases,mbs):  # Loop through cases, one minibatch at a time.
@@ -293,12 +294,16 @@ def autoex(epochs=300,nbits=4,lrate=0.03,showint=100,mbs=None,vfrac=0.1,tfrac=0.
     case_generator = (lambda : TFT.gen_all_one_hot_cases(2**nbits))
     cman = Caseman(cfunc=case_generator,vfrac=vfrac,tfrac=tfrac)
     ann = Gann(dims=[size,nbits,size],cman=cman,lrate=lrate,showint=showint,mbs=mbs,vint=vint,softmax=sm)
+    ann.run(epochs,bestk=bestk)
+    ann.runmore(epochs*2,bestk=bestk)
+
+
+    """
     ann.gen_probe(0,'wgt',('hist','avg'))  # Plot a histogram and avg of the incoming weights to module 0.
     ann.gen_probe(1,'out',('avg','max'))  # Plot average and max value of module 1's output vector
     ann.add_grabvar(0,'wgt') # Add a grabvar (to be displayed in its own matplotlib window).
-    ann.run(epochs,bestk=bestk)
-    ann.runmore(epochs*2,bestk=bestk)
     ann.display_grabvars()
+    """
     return ann
 
 def countex(epochs=5000,nbits=10,ncases=500,lrate=0.5,showint=500,mbs=20,vfrac=0.1,tfrac=0.1,vint=200,sm=True,bestk=1):
@@ -308,4 +313,3 @@ def countex(epochs=5000,nbits=10,ncases=500,lrate=0.5,showint=500,mbs=20,vfrac=0
     ann.run(epochs,bestk=bestk)
     return ann
 
-autoex()

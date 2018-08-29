@@ -2,6 +2,7 @@ import tensorflow as tf
 from src.utils.tflowtools import *
 from src.gann.layer import GannLayer as Layer
 from src.utils.options import ANNOptions as Options
+from src.utils.sessiontracker import SessionTracker
 
 
 class Gann:
@@ -10,6 +11,7 @@ class Gann:
         self.options = options  # Holds all the user defined options
         self.net_dims = options.net_dims
         self.layers = []
+        self.session_tracker = SessionTracker()
 
         # Avoid warnings
         self.input = None
@@ -18,6 +20,8 @@ class Gann:
         self.error = None
         self.trainer = None
         self.target = None
+        self.current_session = None
+        self.global_training_step = None
 
         # Build ANN
         self.build_net()
@@ -26,16 +30,15 @@ class Gann:
     def build_net(self):
         tf.reset_default_graph()    # Useful for multiple runs
         in_count = self.net_dims[0]
-        self.input = tf.placeholder(tf.float64, shape=(None, in_count), name='Input')
+        self.input = tf.placeholder(tf.float64, shape=(None, None), name='Input')
         in_iter = self.input
         for i, out_count in enumerate(self.net_dims[1:]):
-            print(i, out_count)
             layer = Layer(self, self.options, i, in_iter, in_count, out_count)
             in_iter = layer.get_output()
             in_count = out_count
             self.add_layer(layer)
         self.output = in_iter
-        self.target = tf.placeholder(tf.float64, shape=(None, out_count), name='Target')
+        self.target = tf.placeholder(tf.float64, shape=(None, None), name='Target')
         self.set_learning_options()
 
     def add_layer(self, layer: Layer):
@@ -48,9 +51,60 @@ class Gann:
         optimizer = self.options.optimizer(self.options.learning_rate)
         self.trainer = optimizer.minimize(self.error, name='Backprop')
 
+    # Session methods
+
+    def training_session(self, session=None, continued=False):
+        self.current_session = session if session else gen_initialized_session()
+        self.do_training(self.options.case_manager.get_training_cases())
+        pass
+
+    def validation_session(self):
+        pass
+
+    def testing_session(self):
+        pass
+
+    # Methods for doing work in given sessions
+
+    def do_training(self, cases, continued=False):
+        if not self.current_session:
+            print("No active session detected. Please make sure to call method: training_session before using method: "
+                  "do_training")
+            exit(0)
+        if not continued:
+            self.session_tracker.reset()
+        minibatch_size = self.options.minibatch_size
+        for i in range(self.options.epochs):
+            error = 0
+            n_cases = len(cases)
+            l_grab_vars = [self.error] + self.session_tracker.get_grab_variables()
+            n_batches = math.ceil(n_cases/minibatch_size)
+            for batch_start in range(0, n_cases, minibatch_size):
+                batch_end = min(n_cases, batch_start+minibatch_size)
+                minibatch = cases[batch_start:batch_end]   # Extract batch from cases
+                inputs = [case[0] for case in minibatch]
+                targets = [case[1] for case in minibatch]
+                feeder = {self.input: inputs, self.target: targets}
+                print(feeder)
+                result = self.run_step(self.trainer, self.current_session,
+                                       l_grab_vars, feeder)
+            error += result[1][0]
+
+    def run_step(self, operators, session, grabbed_vars=None, feed_dict=None):
+        return session.run([operators, grabbed_vars], feed_dict=feed_dict)
+
+    def do_validation(self):
+        pass
+
+    def do_testing(self):
+        pass
+
+    # Main methods. Called by user.
+
     def run(self):
-        session = gen_initialized_session()
-        close_session(session)
+        self.training_session()
+        #close_session(self.current_session)
+        exit()
 
 
 
