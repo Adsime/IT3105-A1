@@ -12,33 +12,34 @@ class Gann:
         self.net_dims = options.net_dims
         self.layers = []
         self.session_tracker = SessionTracker()
+        self.global_training_step = 0
+
 
         # Avoid warnings
         self.input = None
+        self.target = None
         self.output = None
         self.predictor = None
         self.error = None
         self.trainer = None
-        self.target = None
         self.current_session = None
-        self.global_training_step = None
-
         # Build ANN
         self.build_net()
 
     # Instantiates the neural net, defining each layer by the user specifications in options
     def build_net(self):
         tf.reset_default_graph()    # Useful for multiple runs
+        self.input = tf.placeholder(tf.float64, shape=(None, self.net_dims[0]), name='Input')
+        self.target = tf.placeholder(tf.float64, shape=(None, self.net_dims[-1]), name='Target')
         in_count = self.net_dims[0]
-        self.input = tf.placeholder(tf.float64, shape=(None, None), name='Input')
         in_iter = self.input
         for i, out_count in enumerate(self.net_dims[1:]):
             layer = Layer(self, self.options, i, in_iter, in_count, out_count)
             in_iter = layer.get_output()
             in_count = out_count
             self.add_layer(layer)
-        self.output = in_iter
-        self.target = tf.placeholder(tf.float64, shape=(None, None), name='Target')
+        self.output = layer.output
+        self.output = self.options.cost_function(self.output)
         self.set_learning_options()
 
     def add_layer(self, layer: Layer):
@@ -74,10 +75,11 @@ class Gann:
         if not continued:
             self.session_tracker.reset()
         minibatch_size = self.options.minibatch_size
+        n_cases = len(cases)
         for i in range(self.options.epochs):
             error = 0
-            n_cases = len(cases)
-            l_grab_vars = [self.error] + self.session_tracker.get_grab_variables()
+            step = self.global_training_step + i
+            l_grab_vars = [self.error, self.output] + self.session_tracker.get_grab_variables()
             n_batches = math.ceil(n_cases/minibatch_size)
             for batch_start in range(0, n_cases, minibatch_size):
                 batch_end = min(n_cases, batch_start+minibatch_size)
@@ -85,10 +87,13 @@ class Gann:
                 inputs = [case[0] for case in minibatch]
                 targets = [case[1] for case in minibatch]
                 feeder = {self.input: inputs, self.target: targets}
-                print(feeder)
                 result = self.run_step(self.trainer, self.current_session,
                                        l_grab_vars, feeder)
-            error += result[1][0]
+                print("[" + batch_start.__str__() + ", " + batch_end.__str__() + "] - Error: " + result[1][0].__str__()
+                      + ". Output: " + result[1][1].__str__() + " " + np.sum(result[1][1][0]).__str__())
+                exit()
+                error += result[1][0]
+            print("Epoch: " + step.__str__() + " - Error: " + (error/n_batches).__str__())
 
     def run_step(self, operators, session, grabbed_vars=None, feed_dict=None):
         return session.run([operators, grabbed_vars], feed_dict=feed_dict)

@@ -15,9 +15,9 @@ class GannLayer:
         self.name = "Layer-" + index.__str__()
 
         # Avoid warnings
-        self.weights = None
-        self.biases = None
-        self.output = None
+        #self.weights = None
+        #self.biases = None
+        #self.output = None
 
         # Build layer
         self.build_layer()
@@ -27,7 +27,7 @@ class GannLayer:
                                    name=self.name + '-wgt', trainable=True)  # True = default for trainable anyway
         self.biases = tf.Variable(np.random.uniform(-.1, .1, size=self.out_count),
                                   name=self.name + '-bias', trainable=True)  # First bias vector
-        self.output = self.options.activation_function(tf.matmul(self.input_var, self.weights) + self.biases, name=self.name + '-out')
+        self.output = tf.nn.relu(tf.matmul(self.input_var, self.weights) + self.biases, name=self.name + '-out')
 
     def get_output(self):
         return self.output

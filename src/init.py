@@ -3,13 +3,9 @@ from src.utils.tutor1 import *
 from src.gann.gann import Gann as G, Options
 from src.utils.tutor2 import *
 from src.utils.tutor3 import *
-from src.utils.casemanager import DefaultCaseManager
+from src.utils.casemanager import DefaultCaseManager, CustomCaseManager
+from src.data.mnist_basics import *
 
-case_func = (lambda: TFT.gen_all_one_hot_cases(12))
-options = Options([12, 8, 12], tf.nn.relu, tf.reduce_min, tf.train.AdamOptimizer, DefaultCaseManager(case_func))
-#Gann(options).do_training()
-#autoex()
-#print(int_to_one_hot(5, 9))
-#autoex()
-#autoex1()
+options = Options([784, 100, 20, 10], tf.nn.relu, tf.reduce_min, tf.train.AdamOptimizer, CustomCaseManager(), cost_function=tf.nn.cross)
 G(options).run()
+autoex()

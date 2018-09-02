@@ -5,7 +5,7 @@ from src.utils.casemanager import CaseManager
 class ANNOptions:
 
     def __init__(self, net_dims, activation_function, error_function, optimizer: Optimizer, case_manager: CaseManager,
-                 epochs=1000, minibatch_size=10, learning_rate=0.001):
+                 epochs=1000, minibatch_size=10, learning_rate=0.001, cost_function=tf.nn.softmax):
         self.net_dims = net_dims
         self.learning_rate = learning_rate
         self.activation_function = activation_function
@@ -14,3 +14,4 @@ class ANNOptions:
         self.epochs = epochs
         self.minibatch_size = minibatch_size
         self.case_manager = case_manager
+        self.cost_function = cost_function
