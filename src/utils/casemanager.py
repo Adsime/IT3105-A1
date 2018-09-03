@@ -46,17 +46,20 @@ class DefaultCaseManager(CaseManager):
 
 class CustomCaseManager(CaseManager):
 
-    def __init__(self, vfrac=0, tfrac=0):
+    def __init__(self, data, vfrac=0, tfrac=0):
         self.validation_fraction = vfrac
         self.test_fraction = tfrac
         self.training_fraction = 1 - (vfrac + tfrac)
+        self.data = data
         self.generate_cases()
         self.organize_cases()
 
     def organize_cases(self):
         #separator1 = round(len(self.cases) * self.training_fraction)
         #separator2 = separator1 + round(len(self.cases)*self.validation_fraction)
-        self.training_cases = load_all_flat_cases('training')
+        #self.training_cases = load_all_flat_cases('training')
+        self.training_cases = self.data
+        print(self.data)
         self.training_cases = [[x, int_to_one_hot(t, 10)] for x, t in zip(self.training_cases[0], self.training_cases[1])]
         #self.validation_cases = ca[separator1:separator2]
         self.testing_cases = load_all_flat_cases('testing')

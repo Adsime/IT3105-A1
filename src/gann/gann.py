@@ -78,6 +78,7 @@ class Gann:
         n_cases = len(cases)
         for i in range(self.options.epochs):
             error = 0
+            hits = 0
             step = self.global_training_step + i
             l_grab_vars = [self.error, self.output] + self.session_tracker.get_grab_variables()
             n_batches = math.ceil(n_cases/minibatch_size)
@@ -89,11 +90,13 @@ class Gann:
                 feeder = {self.input: inputs, self.target: targets}
                 result = self.run_step(self.trainer, self.current_session,
                                        l_grab_vars, feeder)
-                print("[" + batch_start.__str__() + ", " + batch_end.__str__() + "] - Error: " + result[1][0].__str__()
-                      + ". Output: " + result[1][1].__str__() + " " + np.sum(result[1][1][0]).__str__())
-                exit()
+                for res, tar in zip(result[1][1], targets):
+                    hits += 1 if np.argmax(res) == np.argmax(tar) else 0
+                #print("[" + batch_start.__str__() + ", " + batch_end.__str__() + "] - Error: " + result[1][0].__str__()
+                #      + ". Output: " + result[1][1].__str__() + " " + np.sum(result[1][1][0]).__str__())
                 error += result[1][0]
-            print("Epoch: " + step.__str__() + " - Error: " + (error/n_batches).__str__())
+            print("Hit rate: " + (hits/n_cases).__str__())
+            #print("Epoch: " + step.__str__() + " - Error: " + (error/n_batches).__str__())
 
     def run_step(self, operators, session, grabbed_vars=None, feed_dict=None):
         return session.run([operators, grabbed_vars], feed_dict=feed_dict)
