@@ -5,9 +5,11 @@ from src.utils.tutor2 import *
 from src.utils.tutor3 import *
 from src.utils.casemanager import DefaultCaseManager, CustomCaseManager
 from src.data.mnist_basics import *
-from src.utils.fileReader import *
+from src.utils.dataHandler import *
 
-options = Options([11, 100, 20, 10], tf.nn.relu, tf.reduce_min, tf.train.AdamOptimizer,
-                  CustomCaseManager(get_csv_cases('./data/wine.txt')), cost_function=tf.nn.softmax, learning_rate=0.001)
-G(options).run()
+#options = Options([11, 100, 20, 10], tf.nn.relu, tf.reduce_min, tf.train.AdamOptimizer,
+ #                 CustomCaseManager(get_csv_cases('./data/wine.txt')), cost_function=tf.nn.softmax, learning_rate=0.001)
+#G(options).run()
 #autoex()
+
+print(get_data("mnist_training"))

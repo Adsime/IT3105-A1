@@ -46,27 +46,18 @@ class DefaultCaseManager(CaseManager):
 
 class CustomCaseManager(CaseManager):
 
-    def __init__(self, data, vfrac=0, tfrac=0):
-        self.validation_fraction = vfrac
-        self.test_fraction = tfrac
-        self.training_fraction = 1 - (vfrac + tfrac)
-        self.data = data
-        self.generate_cases()
-        self.organize_cases()
-
-    def organize_cases(self):
-        #separator1 = round(len(self.cases) * self.training_fraction)
-        #separator2 = separator1 + round(len(self.cases)*self.validation_fraction)
-        #self.training_cases = load_all_flat_cases('training')
-        self.training_cases = self.data
-        print(self.data)
-        self.training_cases = [[x, int_to_one_hot(t, 10)] for x, t in zip(self.training_cases[0], self.training_cases[1])]
-        #self.validation_cases = ca[separator1:separator2]
-        self.testing_cases = load_all_flat_cases('testing')
-        self.testing_cases = [[x, int_to_one_hot(t, 10)] for x, t in zip(self.testing_cases[0], self.testing_cases[1])]
+    def __init__(self, cases, testing_cases, vfrac=0, tfrac=0):
+        self.tfrac = 1 - (vfrac + tfrac)
+        self.ca = cases
+        separator1 = round(len(self.ca) * self.tfrac)
+        separator2 = separator1 + round(len(self.ca) * vfrac)
+        np.random.shuffle(self.ca)
+        self.training_cases = self.ca[0:tfrac]
+        self.validation_cases = self.ca[separator1:separator2]
+        self.testing_cases = testing_cases if tfrac == 0 else ca[separator2:]
 
     def get_training_cases(self): return self.training_cases
 
-    #def get_validation_cases(self): return self.validation_cases
+    def get_validation_cases(self): return self.validation_cases
 
     def get_testing_cases(self): return self.testing_cases
