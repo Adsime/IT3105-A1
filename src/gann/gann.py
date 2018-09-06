@@ -13,6 +13,7 @@ class Gann:
         self.layers = []
         self.session_tracker = SessionTracker()
         self.global_training_step = 0
+        self.cman = self.options.case_manager
 
 
         # Avoid warnings
@@ -39,14 +40,14 @@ class Gann:
             in_count = out_count
             self.add_layer(layer)
         self.output = layer.output
-        self.output = self.options.cost_function(self.output)
+        self.output = self.options.o_activation_function(self.output)
         self.set_learning_options()
 
     def add_layer(self, layer: Layer):
         self.layers.append(layer)
 
     def set_learning_options(self):
-        self.error = tf.reduce_mean(tf.square(self.target - self.output), name='MSE')
+        self.error = self.options.cost_function(self.target, self.output)
         self.predictor = self.output  # Simple prediction runs will request the value of output neurons
         # Defining the training operator
         optimizer = self.options.optimizer(self.options.learning_rate)
@@ -56,14 +57,16 @@ class Gann:
 
     def training_session(self, session=None, continued=False):
         self.current_session = session if session else gen_initialized_session()
-        self.do_training(self.options.case_manager.get_training_cases())
+        self.do_training(self.cman.get_training_cases())
         pass
 
     def validation_session(self):
         pass
 
     def testing_session(self):
-        pass
+        cases = self.cman.get_training_cases()
+        res = self.do_testing(cases)
+        print("Test result: " + str(round(res * 100, 2)) + "%")
 
     # Methods for doing work in given sessions
 
@@ -78,39 +81,48 @@ class Gann:
         n_cases = len(cases)
         for i in range(self.options.epochs):
             error = 0
-            hits = 0
             step = self.global_training_step + i
             l_grab_vars = [self.error, self.output] + self.session_tracker.get_grab_variables()
             n_batches = math.ceil(n_cases/minibatch_size)
             for batch_start in range(0, n_cases, minibatch_size):
-                batch_end = min(n_cases, batch_start+minibatch_size)
-                minibatch = cases[batch_start:batch_end]   # Extract batch from cases
-                inputs = [case[0] for case in minibatch]
-                targets = [case[1] for case in minibatch]
-                feeder = {self.input: inputs, self.target: targets}
-                result = self.run_step(self.trainer, self.current_session,
-                                       l_grab_vars, feeder)
-                for res, tar in zip(result[1][1], targets):
-                    hits += 1 if np.argmax(res) == np.argmax(tar) else 0
-                #print("[" + batch_start.__str__() + ", " + batch_end.__str__() + "] - Error: " + result[1][0].__str__()
-                #      + ". Output: " + result[1][1].__str__() + " " + np.sum(result[1][1][0]).__str__())
-                error += result[1][0]
-            print("Hit rate: " + (hits/n_cases).__str__())
-            #print("Epoch: " + step.__str__() + " - Error: " + (error/n_batches).__str__())
+                batch_end = min(n_cases, batch_start+minibatch_size)    # Determining the size of the minibach
+                minibatch = cases[batch_start:batch_end]    # Extracting the minibatch
+                feeder = self.generate_feeder(minibatch)
+                result = self.run_step(self.trainer, l_grab_vars, feeder)
+            self.consider_validation_testing(step)
 
-    def run_step(self, operators, session, grabbed_vars=None, feed_dict=None):
-        return session.run([operators, grabbed_vars], feed_dict=feed_dict)
+    def run_step(self, operators, grabbed_vars=None, feed_dict=None):
+        return self.current_session.run([operators, grabbed_vars], feed_dict=feed_dict)
+
+    def one_hots_to_ints(self, cases):
+        return [one_hot_to_int(i[1]) for i in cases]
+
+    def generate_feeder(self, cases):
+        return {self.input: [case[0] for case in cases], self.target: [case[1] for case in cases]}
+
+    def generate_hit_counter(self, cases):
+        correct = tf.nn.in_top_k(tf.cast(self.predictor, tf.float32), self.one_hots_to_ints(cases), 1)
+        return tf.reduce_sum(tf.cast(correct, tf.int32))
+
+    def consider_validation_testing(self, epoch):
+        if not (epoch % self.options.vint):
+            self.do_validation()
 
     def do_validation(self):
-        pass
+        test_err = self.do_testing(self.cman.get_validation_cases())
+        print("Validation accuracy: " + test_err.__str__())
 
-    def do_testing(self):
-        pass
+    def do_testing(self, cases):
+        feeder = self.generate_feeder(cases)
+        res = self.run_step(self.generate_hit_counter(cases), [], feeder)
+        return res[0]/len(cases)
+
 
     # Main methods. Called by user.
 
     def run(self):
         self.training_session()
+        self.testing_session()
         #close_session(self.current_session)
         exit()
 

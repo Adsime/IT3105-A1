@@ -52,9 +52,9 @@ class CustomCaseManager(CaseManager):
         separator1 = round(len(self.ca) * self.tfrac)
         separator2 = separator1 + round(len(self.ca) * vfrac)
         np.random.shuffle(self.ca)
-        self.training_cases = self.ca[0:tfrac]
+        self.training_cases = self.ca[0:separator1]
         self.validation_cases = self.ca[separator1:separator2]
-        self.testing_cases = testing_cases if tfrac == 0 else ca[separator2:]
+        self.testing_cases = testing_cases if tfrac == 0 else self.ca[separator2:]
 
     def get_training_cases(self): return self.training_cases
 
