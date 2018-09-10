@@ -14,6 +14,7 @@ class Gann:
         self.session_tracker = SessionTracker()
         self.global_training_step = 0
         self.cman = self.options.case_manager
+        self.optimizer = options.optimizer
 
 
         # Avoid warnings
@@ -39,8 +40,7 @@ class Gann:
             in_iter = layer.get_output()
             in_count = out_count
             self.add_layer(layer)
-        self.output = layer.output
-        self.output = self.options.o_activation_function(self.output)
+        self.output = self.options.o_activation_function(layer.output)
         self.set_learning_options()
 
     def add_layer(self, layer: Layer):
@@ -49,9 +49,7 @@ class Gann:
     def set_learning_options(self):
         self.error = self.options.cost_function(self.target, self.output)
         self.predictor = self.output  # Simple prediction runs will request the value of output neurons
-        # Defining the training operator
-        optimizer = self.options.optimizer(self.options.learning_rate)
-        self.trainer = optimizer.minimize(self.error, name='Backprop')
+        self.trainer = self.optimizer.minimize(self.error, name='Backprop')
 
     # Session methods
 
@@ -89,6 +87,8 @@ class Gann:
                 minibatch = cases[batch_start:batch_end]    # Extracting the minibatch
                 feeder = self.generate_feeder(minibatch)
                 result = self.run_step(self.trainer, l_grab_vars, feeder)
+                error += result[1][0]
+            self.session_tracker.append_training_error(step, error/n_batches)
             self.consider_validation_testing(step)
 
     def run_step(self, operators, grabbed_vars=None, feed_dict=None):

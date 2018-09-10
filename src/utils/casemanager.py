@@ -56,6 +56,8 @@ class CustomCaseManager(CaseManager):
         self.validation_cases = self.ca[separator1:separator2]
         self.testing_cases = testing_cases if tfrac == 0 else self.ca[separator2:]
 
+        print(np.shape(self.training_cases), np.shape(self.validation_cases), np.shape(self.testing_cases))
+
     def get_training_cases(self): return self.training_cases
 
     def get_validation_cases(self): return self.validation_cases
