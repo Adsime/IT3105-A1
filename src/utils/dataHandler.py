@@ -33,12 +33,12 @@ def get_class_count(targets):
     return np.max(targets) + 1
 
 
-def lambda_gen(file, compiled=False): return lambda scale_func=None: \
-    flat_to_case(file, scale_func) if compiled else get_csv_cases(file, scale_func)
+def lambda_gen(file, delimiter=',', compiled=False): return lambda scale_func=None: \
+    flat_to_case(file, scale_func) if compiled else get_csv_cases(file, scale_func, delimiter)
 
 
 data_sources = {
-    "wine": lambda_gen('wine'),
+    "wine": lambda_gen('wine', ';'),
     "yeast": lambda_gen('yeast'),
     "glass": lambda_gen('glass'),
     "mnist_training": lambda_gen('training', True),

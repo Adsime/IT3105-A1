@@ -47,14 +47,13 @@ class DefaultCaseManager(CaseManager):
 class CustomCaseManager(CaseManager):
 
     def __init__(self, cases, testing_cases, vfrac=0, tfrac=0):
-        self.tfrac = 1 - (vfrac + tfrac)
-        self.ca = cases
-        separator1 = round(len(self.ca) * self.tfrac)
-        separator2 = separator1 + round(len(self.ca) * vfrac)
-        np.random.shuffle(self.ca)
-        self.training_cases = self.ca[0:separator1]
-        self.validation_cases = self.ca[separator1:separator2]
-        self.testing_cases = testing_cases if tfrac == 0 else self.ca[separator2:]
+        tfrac = 1 - (vfrac + tfrac)
+        np.random.shuffle(cases)
+        separator1 = round(len(cases) * tfrac)
+        separator2 = separator1 + round(len(cases) * vfrac)
+        self.training_cases = cases[0:separator1]
+        self.validation_cases = cases[separator1:separator2]
+        self.testing_cases = testing_cases if tfrac == 0 else cases[separator2:]
 
         print(np.shape(self.training_cases), np.shape(self.validation_cases), np.shape(self.testing_cases))
 

@@ -1,17 +1,23 @@
 class SessionTracker:
 
+    t_err = "training_error"
+    v_err = "validation_error"
+    top_k_err = "top_1_error"
+
     def __init__(self):
         self.reset()
+
 
     def reset(self):
         #   error history. format: [ [step] , [error] ]
         self.history = {
-            "training_error": [[], []],
-            "validation_error": [[], []]
+            self.t_err: [[], []],
+            self.v_err: [[], []],
+            self.top_k_err: [[], []]
         }
         self.grab_vars = []
 
-    def append_training_error(self, step, error, arr="training_error"):
+    def append_error(self, step, error, arr):
         try:
             self.history[arr][0].append(step)
             self.history[arr][1].append(error)

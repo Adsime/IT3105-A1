@@ -54,7 +54,7 @@ def fireup_tensorboard(logdir):
     os.system('tensorboard --logdir='+logdir)
 
 def clear_tensorflow_log(logdir):
-    os.system('rm ' + logdir +'/events.out.*')
+    os.system('del ' + logdir +'\events.out.*')
 
 # ***** GENERATING Simple DATA SETS for MACHINE LEARNING *****
 
