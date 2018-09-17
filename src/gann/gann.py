@@ -4,7 +4,7 @@ from src.gann.layer import GannLayer as Layer
 from src.utils.options import ANNOptions as Options
 from src.utils.sessiontracker import SessionTracker
 from src.utils.visualizer import *
-
+from threading import Thread
 
 class Gann:
 
@@ -12,7 +12,7 @@ class Gann:
         self.options = options  # Holds all the user defined options
         self.net_dims = options.net_dims
         self.layers = []
-        self.session_tracker = SessionTracker()
+        self.session_tracker = options.session_tracker
         self.global_training_step = 0
         self.cman = self.options.case_manager
         self.optimizer = options.optimizer
@@ -78,7 +78,8 @@ class Gann:
                   "do_training")
             exit(0)
         if not continued:
-            self.session_tracker.reset()
+            pass
+            #self.session_tracker.reset()
         minibatch_size = self.options.minibatch_size
         n_cases = len(cases)
         l_grab_vars = [self.error, self.output] + self.session_tracker.get_grab_variables()
@@ -94,14 +95,15 @@ class Gann:
                 minibatch = cases[batch_start:batch_end]
             feeder = self.generate_feeder(minibatch)
             result = self.run_step(self.trainer, l_grab_vars, feeder)
-            if not i % 100:
+            if not i % self.options.vint:
+                print("aw yiss")
                 error = result[1][0]
                 self.session_tracker.append_error(step, error, self.session_tracker.t_err)
                 self.session_tracker.append_error(step, self.get_top_k_error(cases, 1), self.session_tracker.top_k_err)
                 self.consider_validation_testing(step)
+                self.session_tracker.draw()
             batch_start = batch_end
             batch_end = batch_end + self.options.minibatch_size
-            print(i)
 
 
 
@@ -156,11 +158,20 @@ class Gann:
     def run(self):
         self.training_session()
         self.testing_session()
-        visualize(self.session_tracker.history)
+        #visualize(self.session_tracker.history)
         #close_session(self.current_session)
         exit()
 
 
+class GannThread(Thread):
 
+    def __init__(self, options):
+        Thread.__init__(self)
+        self.options = options
+        self.start()
+
+    def run(self):
+        Gann(self.options).run()
+        self.join()
 
 

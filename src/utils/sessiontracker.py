@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 class SessionTracker:
 
     t_err = "training_error"
@@ -5,6 +7,7 @@ class SessionTracker:
     top_k_err = "top_1_error"
 
     def __init__(self):
+        self.updated = False
         self.reset()
 
 
@@ -15,6 +18,8 @@ class SessionTracker:
             self.v_err: [[], []],
             self.top_k_err: [[], []]
         }
+        #self.visualizer = Visualizer()
+        #self.visualizer.show()
         self.grab_vars = []
 
     def append_error(self, step, error, arr):
@@ -30,3 +35,6 @@ class SessionTracker:
 
     def get_grab_variables(self):
         return self.grab_vars
+
+    def draw(self):
+        self.updated = True

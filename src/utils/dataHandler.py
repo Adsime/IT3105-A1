@@ -41,8 +41,8 @@ data_sources = {
     "wine": lambda_gen('wine', ';'),
     "yeast": lambda_gen('yeast'),
     "glass": lambda_gen('glass'),
-    "mnist_training": lambda_gen('training', True),
-    "mnist_testing": lambda_gen('testing', True)
+    "mnist_training": lambda_gen('training', ',', True),
+    "mnist_testing": lambda_gen('testing', ',', True)
 }
 
 

@@ -1,10 +1,11 @@
 import tensorflow as tf
 from tensorflow.python.training import optimizer as Optimizer
 from src.utils.casemanager import CaseManager
+from src.utils.sessiontracker import SessionTracker
 
 class ANNOptions:
 
-    def __init__(self, net_dims, optimizer: Optimizer, case_manager: CaseManager,
+    def __init__(self, net_dims, optimizer: Optimizer, case_manager: CaseManager, session_tracker: SessionTracker,
                  steps=1000, minibatch_size=10, learning_rate=0.001, weight_range=[-1, 1],
                  vint=10,
                  h_activation_function=tf.nn.relu, o_activation_function=tf.nn.softmax,
@@ -20,3 +21,4 @@ class ANNOptions:
         self.o_activation_function = o_activation_function
         self.vint = vint
         self.cost_function = cost_function
+        self.session_tracker = session_tracker
