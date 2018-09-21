@@ -1,6 +1,5 @@
 from src.utils.tflowtools import *
-from src.data.mnist_basics import *
-
+import random
 
 class CaseManager:
 
@@ -13,6 +12,9 @@ class CaseManager:
     def get_validation_cases(self): pass
 
     def get_testing_cases(self): pass
+
+    def get_n_random_cases(self, n, cases):
+        return random.sample(cases, n)
 
 
 class DefaultCaseManager(CaseManager):
@@ -46,14 +48,17 @@ class DefaultCaseManager(CaseManager):
 
 class CustomCaseManager(CaseManager):
 
-    def __init__(self, cases, testing_cases, vfrac=0, tfrac=0):
+    def __init__(self, cases, testing_cases, cfrac = 1.0, vfrac=0, tfrac=0):
         tfrac = 1 - (vfrac + tfrac)
+        cfrac = round(len(cases) * cfrac)
         np.random.shuffle(cases)
-        separator1 = round(len(cases) * tfrac)
-        separator2 = separator1 + round(len(cases) * vfrac)
-        self.training_cases = cases[0:separator1]
-        self.validation_cases = cases[separator1:separator2]
-        self.testing_cases = testing_cases if tfrac == 0 else cases[separator2:]
+        cases = self.get_n_random_cases(cfrac, cases)
+        cases = cases[:cfrac]
+        tfrac = round(len(cases) * tfrac)
+        vfrac = tfrac + round(len(cases) * vfrac)
+        self.training_cases = cases[0:tfrac]
+        self.validation_cases = cases[tfrac:vfrac]
+        self.testing_cases = testing_cases if tfrac == 0 else cases[vfrac:]
 
         print(np.shape(self.training_cases), np.shape(self.validation_cases), np.shape(self.testing_cases))
 

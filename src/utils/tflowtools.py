@@ -372,15 +372,12 @@ def simple_scatter_plot(points,alpha=0.5,radius=3):
 # If you do not want to draw box edges, just use 'None' as the 4th color.  A gray-scale combination that
 # mirrors Hinton's original version is ['gray','white','black',None]
 
-def hinton_plot(matrix, maxval=None, maxsize=1, fig=None,trans=True,scale=True, title='Hinton plot',
+def hinton_plot(matrix, axes, maxval=None, maxsize=1, fig=None,trans=True,scale=True, title='Hinton plot',
                 colors=['gray','red','blue','white']):
-    hfig = fig if fig else PLT.figure()
-    hfig.suptitle(title,fontsize=18)
     if trans: matrix = matrix.transpose()
     if maxval == None: maxval = np.abs(matrix).max()
     if not maxsize: maxsize = 2**np.ceil(np.log(maxval)/np.log(2))
 
-    axes = hfig.gca()
     axes.clear()
     axes.patch.set_facecolor(colors[0]);  # This is the background color.  Hinton uses gray
     axes.set_aspect('auto','box')  # Options: ('equal'), ('equal','box'), ('auto'), ('auto','box')..see matplotlib docs
@@ -395,8 +392,7 @@ def hinton_plot(matrix, maxval=None, maxsize=1, fig=None,trans=True,scale=True, 
         blob = PLT.Rectangle(bottom_left, size, size, facecolor=color, edgecolor=colors[3])
         axes.add_patch(blob)
     axes.autoscale_view()
-    PLT.draw()
-    PLT.pause(.001)
+    return axes
 
 # This graphically displays a matrix with color codes for positive, negative, small positive and small negative,
 # with the latter 2 defined by the 'cutoff' argument.  The transpose (trans) arg defaults to

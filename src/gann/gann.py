@@ -26,8 +26,6 @@ class Gann:
         self.error = None
         self.trainer = None
         self.current_session = None
-        # Build ANN
-        self.build_net()
 
     # Instantiates the neural net, defining each layer by the user specifications in options
     def build_net(self):
@@ -70,6 +68,15 @@ class Gann:
         res = self.do_testing(cases)
         print("Training result: " + str(round(res * 100, 2)) + "%")
 
+    def mapping_session(self):
+        g_vars = []
+        for layer in self.layers:
+            g_vars.append(layer.output)
+        cases = self.cman.get_n_random_cases(10, self.cman.get_testing_cases())
+        feeder = self.generate_feeder(cases)
+        res = self.run_step(self.predictor, g_vars, feeder)
+        self.session_tracker.set_hinton_data(res[1])
+
     # Methods for doing work in given sessions
 
     def do_training(self, cases, continued=False):
@@ -96,28 +103,12 @@ class Gann:
             feeder = self.generate_feeder(minibatch)
             result = self.run_step(self.trainer, l_grab_vars, feeder)
             if not i % self.options.vint:
-                print("aw yiss")
                 error = result[1][0]
                 self.session_tracker.append_error(step, error, self.session_tracker.t_err)
                 self.session_tracker.append_error(step, self.get_top_k_error(cases, 1), self.session_tracker.top_k_err)
                 self.consider_validation_testing(step)
-                self.session_tracker.draw()
             batch_start = batch_end
             batch_end = batch_end + self.options.minibatch_size
-
-
-
-
-            """for batch_start in range(0, n_cases, minibatch_size):
-                batch_end = min(n_cases, batch_start+minibatch_size)    # Determining the size of the minibach
-                minibatch = cases[batch_start:batch_end]    # Extracting the minibatch
-                feeder = self.generate_feeder(minibatch)
-                result = self.run_step(self.trainer, l_grab_vars, feeder)
-                error = result[1][0]
-                self.session_tracker.append_error(step, error / n_batches, self.session_tracker.t_err)
-                self.session_tracker.append_error(step, self.get_top_k_error(cases, 1), self.session_tracker.top_k_err)
-                self.consider_validation_testing(step)
-            """
 
     def run_step(self, operators, grabbed_vars=None, feed_dict=None):
         return self.current_session.run([operators, grabbed_vars], feed_dict=feed_dict)
@@ -156,22 +147,29 @@ class Gann:
     # Main methods. Called by user.
 
     def run(self):
+        # Build ANN
+        self.build_net()
         self.training_session()
         self.testing_session()
         #visualize(self.session_tracker.history)
         #close_session(self.current_session)
-        exit()
 
 
 class GannThread(Thread):
 
-    def __init__(self, options):
+    def __init__(self, gann: Gann):
         Thread.__init__(self)
-        self.options = options
+        #self.methods = methods
+        self.gann = gann
         self.start()
 
     def run(self):
-        Gann(self.options).run()
-        self.join()
+        self.gann.build_net()
+        self.gann.training_session()
+        #self.gann.testing_session()
+        self.gann.mapping_session()
+        #self.gann.run()
+        #Gann(self.options).run()
+        return
 
 

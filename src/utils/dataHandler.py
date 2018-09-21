@@ -4,7 +4,7 @@ from src.utils.tflowtools import *
 import time
 
 #__file_path__ = 'D:/GitProjects/IT3105-A1/src/data/'    # Home pc
-__file_path__ = 'C:/Users/bruker/Desktop/gitProjects/IT3105-A1/src/data/'    # School pc
+__file_path__ = 'data/'    # School pc
 
 
 def get_csv_cases(file, scale_func, delimiter=';'):
@@ -49,7 +49,14 @@ data_sources = {
 def mean_std(cases):
     mean = np.mean(cases, axis=0)
     std_div = np.std(cases, axis=0)
+    std_div = [1 if val == 0 else val for val in std_div]
     return [np.divide(np.subtract(case, mean), std_div) for case in cases]
+
+
+def direct_scale(cases):
+    max = np.max(cases)
+    cases = np.divide(cases, max)
+    return cases
 
 
 def get_data(data_name, scale_func=mean_std):

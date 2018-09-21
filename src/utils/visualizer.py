@@ -6,6 +6,11 @@ import tkinter as tk
 from src.utils.sessiontracker import SessionTracker
 import time
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+from src.gui.window import Window
+from src.gui.error import ErrorFrame
+from src.gui.hinton import HintonFrame
 
 class Visualizer():
 
@@ -22,84 +27,40 @@ class Visualizer():
         self.ax.set_ylabel("Error")
         self.ax.set_xlabel("Mini batch")
         """
+        # [[case, target], [case, target]]
 
         plt.ion()
 
+        self.row, self.column = [0, 0]
+
         self.session_tracker = session_tracker
 
-        self.lines = {}
-        for set in session_tracker.history:
-            self.lines[set] = None
+        self.window = Window()
 
-        self.window = tk.Tk()
-        self.window.wm_title("Embedding in TK")
+        self.insert_error_frame()
+        self.insert_hinton_frame()
 
-        self.fig = Figure()
-        self.ax = self.fig.add_subplot(111)
+        self.window.start()
 
-        self.ax.set_title('Stuff and things')
-        self.ax.set_xlabel('Mini batches')
-        self.ax.set_ylabel('Error')
+    def insert_error_frame(self):
+        self.insert_frame(ErrorFrame(self.session_tracker, self.window.window, [self.row, self.column]))
 
-        # a tk.DrawingArea
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.window)
-        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        self.canvas.show()
+    def insert_hinton_frame(self):
+        self.insert_frame(HintonFrame(self.session_tracker, self.window.window, [self.row, self.column]))
 
-        self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+    def insert_frame(self, frame):
+        self.window.add_frame(frame)
+        self.increment()
+
+    def increment(self):
+        self.row += 1 if self.column == 2 else 0
+        self.column = self.column + 1 if self.column < 2 else 0
 
 
-        self.start()
+    def add_figure(self, figure, loc=(0, 0)):
+        canvas = FigureCanvasTkAgg(figure, master=self.window)
+        canvas.get_tk_widget().grid(row=loc[0], column=loc[1])
+        b = tk.Button(master=self.window, text="CLICK!", command=self.session_tracker.delete)
+        b.grid(row=loc[0], column=loc[1])
+        return canvas
 
-    def visualize(self, data):
-        """with plt.style.context('seaborn-colorblind'):
-            print(plt.style.available)
-            labels = []
-            for set in data:
-                x = data[set][0]
-                y = data[set][1]
-                plt.plot(x, y, label=set)
-                labels.append(set)
-            plt.legend(labels)
-            plt.title('Stuff and things')
-            plt.xlabel('Epoch')
-            plt.ylabel('Error')
-            plt.show()"""
-        pass
-
-    def draw(self, data):
-        """for set in data:
-            x = data[set][0]
-            y = data[set][1]
-            self.ax.plot(x, y, label=set)
-        data = data['training_error']
-        self.ax.plot(data[0], data[1], label='training_error')
-
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()"""
-        print("her")
-        self.window.update()
-        pass
-
-    def updateGUI(self):
-        if self.session_tracker.updated:
-            data = self.session_tracker.history
-            labels = []
-            self.ax.clear()
-            for set in data:
-                if self.lines[set] is None:
-                    sp, = self.ax.plot([], [], label=set)
-                    self.lines[set] = sp
-                x = data[set][0]
-                y = data[set][1]
-                self.ax.plot(x,y)
-                labels.append(set)
-                self.ax.legend(labels)
-            self.canvas.draw()
-            self.session_tracker.updated = False
-
-    def start(self):
-        while True:
-            self.updateGUI()
-            self.window.update_idletasks()
-            self.window.update()
