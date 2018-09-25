@@ -5,6 +5,7 @@ from src.utils.options import ANNOptions as Options
 from src.utils.sessiontracker import SessionTracker
 from src.utils.visualizer import *
 from threading import Thread
+import numpy as np
 
 class Gann:
 
@@ -93,7 +94,7 @@ class Gann:
             #self.session_tracker.reset()
         minibatch_size = self.options.minibatch_size
         n_cases = len(cases)
-        l_grab_vars = [self.error, self.output] + self.session_tracker.get_grab_variables()
+        l_grab_vars = [self.error, self.output]
         n_batches = math.ceil(n_cases / minibatch_size)
         batch_start = 0
         batch_end = self.options.minibatch_size
@@ -104,13 +105,9 @@ class Gann:
                 minibatch = cases[batch_start:] + cases[:batch_end]
             else:
                 minibatch = cases[batch_start:batch_end]
-            feeder = self.generate_feeder(minibatch)
-            result = self.run_step(self.trainer, l_grab_vars, feeder)
-            if not i % self.options.vint:
-                error = result[1][0]
-                self.session_tracker.append_error(step, error, self.session_tracker.t_err)
-                self.session_tracker.append_error(step, self.get_top_k_error(cases, 1), self.session_tracker.top_k_err)
-                self.consider_validation_testing(step)
+            result = self.run_step(self.trainer, l_grab_vars, self.generate_feeder(minibatch))
+            error = result[1][0]
+            self.session_tracker.error_tracker.gather_data(step, error, self, self.cman)
             batch_start = batch_end
             batch_end = batch_end + self.options.minibatch_size
 
@@ -121,16 +118,16 @@ class Gann:
         return [one_hot_to_int(i[1]) for i in cases]
 
     def generate_feeder(self, cases):
-        return {self.input: [case[0] for case in cases], self.target: [case[1] for case in cases]}
+        x, y = np.transpose(cases)
+        return {self.input: x.tolist(), self.target: y.tolist()}
 
     def generate_hit_counter(self, cases, k=1):
         correct = tf.nn.in_top_k(tf.cast(self.predictor, tf.float32), self.one_hots_to_ints(cases), k)
         return tf.reduce_sum(tf.cast(correct, tf.int32))
 
     def consider_validation_testing(self, epoch):
-        if not (epoch % self.options.vint):
-            v_err = 1 - self.do_validation()
-            self.session_tracker.append_error(epoch, v_err, self.session_tracker.v_err)
+        v_err = 1 - self.do_validation()
+        self.session_tracker.append_error(epoch, v_err, self.session_tracker.v_err)
 
     def do_validation(self):
         cases = self.cman.get_validation_cases()
@@ -145,7 +142,7 @@ class Gann:
     def do_testing(self, cases):
         feeder = self.generate_feeder(cases)
         res = self.run_step(self.generate_hit_counter(cases), [], feeder)
-        return res[0]/len(cases)
+        return 1 - (res[0]/len(cases))
 
 
     # Main methods. Called by user.

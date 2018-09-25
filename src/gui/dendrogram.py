@@ -3,7 +3,7 @@ import scipy.cluster.hierarchy as sch  # Needed for dendrograms
 
 class DendrogramFrame(Frame):
     def __init__(self, session_tracker: SessionTracker, window, location):
-        Frame.__init__(self, session_tracker, window, location, "Dendrogram", "Stuff", "stuff2")
+        Frame.__init__(self, session_tracker, window, location, "Dendrogram", "Label", "Distance")
         self.build()
 
     def update(self, override=False):
@@ -18,7 +18,7 @@ class DendrogramFrame(Frame):
     def dendrogram(self, features, mode='average', metric='euclidean', orient='top', lrot=90.0):
         cluster_history = sch.linkage(features, method=mode, metric=metric)
         sch.dendrogram(cluster_history, orientation=orient, leaf_rotation=lrot, ax=self.ax)
-        self.ax.set_ylabel(metric + " distance")
+        self.ylabel= (metric + " distance")
 
 
     def build(self):

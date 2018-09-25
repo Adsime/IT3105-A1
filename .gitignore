@@ -27,3 +27,4 @@ src/netsaver
 src/probeview
 venv
 src/data
+*.pyc

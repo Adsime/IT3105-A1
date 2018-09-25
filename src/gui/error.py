@@ -8,8 +8,8 @@ class ErrorFrame(Frame):
         self.build()
 
     def update(self, override=False):
-        if self.session_tracker.error_updated:
-            data = self.session_tracker.history
+        if self.session_tracker.error_tracker.updated:
+            data = self.session_tracker.error_tracker.history
             labels = []
             self.clear()
             for set in data:
@@ -19,7 +19,7 @@ class ErrorFrame(Frame):
                 labels.append(set)
                 self.ax.legend(labels)
             self.draw()
-            self.session_tracker.error = False
+            self.session_tracker.error_tracker.updated = False
 
     def build(self):
         fig = Figure()

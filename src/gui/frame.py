@@ -1,6 +1,6 @@
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from src.utils.sessiontracker import SessionTracker
+from src.utils.sessiontracker import SessionTracker, ErrorTacker
 import tkinter as tk
 import matplotlib.pyplot as plt
 import numpy as np
