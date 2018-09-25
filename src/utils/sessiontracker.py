@@ -9,6 +9,7 @@ class SessionTracker:
     def __init__(self):
         self.error_updated = False
         self.hinton_updated = False
+        self.dendro_updated = False
         self.reset()
 
 
@@ -20,6 +21,7 @@ class SessionTracker:
             self.top_k_err: [[], []]
         }
         self.hinton = []
+        self.dendro = []
         #self.visualizer = Visualizer()
         #self.visualizer.show()
         self.grab_vars = []
@@ -48,3 +50,7 @@ class SessionTracker:
     def set_hinton_data(self, data):
         self.hinton = data
         self.hinton_updated = True
+
+    def set_dendro_data(self, data):
+        self.dendro = data
+        self.dendro_updated = True

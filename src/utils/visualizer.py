@@ -8,9 +8,11 @@ import time
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
-from src.gui.window import Window
-from src.gui.error import ErrorFrame
-from src.gui.hinton import HintonFrame
+import src.gui as gui
+from gui.window import Window
+from gui.dendrogram import DendrogramFrame
+from gui.error import ErrorFrame
+from gui.hinton import HintonFrame
 
 class Visualizer():
 
@@ -38,7 +40,8 @@ class Visualizer():
         self.window = Window()
 
         self.insert_error_frame()
-        self.insert_hinton_frame()
+        #self.insert_hinton_frame()
+        self.insert_dendro_frame()
 
         self.window.start()
 
@@ -48,13 +51,16 @@ class Visualizer():
     def insert_hinton_frame(self):
         self.insert_frame(HintonFrame(self.session_tracker, self.window.window, [self.row, self.column]))
 
+    def insert_dendro_frame(self):
+        self.insert_frame(DendrogramFrame(self.session_tracker, self.window.window, [self.row, self.column]))
+
     def insert_frame(self, frame):
         self.window.add_frame(frame)
         self.increment()
 
     def increment(self):
-        self.row += 1 if self.column == 2 else 0
-        self.column = self.column + 1 if self.column < 2 else 0
+        self.row += 1 if self.column == 1 else 0
+        self.column = self.column + 1 if self.column < 1 else 0
 
 
     def add_figure(self, figure, loc=(0, 0)):

@@ -3,8 +3,7 @@ from src.data.mnist_basics import *
 from src.utils.tflowtools import *
 import time
 
-#__file_path__ = 'D:/GitProjects/IT3105-A1/src/data/'    # Home pc
-__file_path__ = 'data/'    # School pc
+__file_path__ = 'data/'
 
 
 def get_csv_cases(file, scale_func, delimiter=';'):
@@ -61,3 +60,19 @@ def direct_scale(cases):
 
 def get_data(data_name, scale_func=mean_std):
     return data_sources[data_name](scale_func)
+
+
+def Wine(scale_func=mean_std):
+    return get_csv_cases('wine', scale_func, ';')
+
+
+def Yeast(scale_func=mean_std):
+    return get_csv_cases('yeast', scale_func, ',')
+
+
+def Glass(scale_func=mean_std):
+    return get_csv_cases("glass", scale_func, ',')
+
+
+def Mnist(scale_func=mean_std, dataset='training'):
+    return flat_to_case(dataset, scale_func)

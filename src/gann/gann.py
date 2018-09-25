@@ -69,13 +69,17 @@ class Gann:
         print("Training result: " + str(round(res * 100, 2)) + "%")
 
     def mapping_session(self):
-        g_vars = []
+        weights = []
+        outputs = []
         for layer in self.layers:
-            g_vars.append(layer.output)
+            weights.append(layer.weights)
+            outputs.append(layer.output)
+        g_vars = [weights, outputs]
         cases = self.cman.get_n_random_cases(10, self.cman.get_testing_cases())
         feeder = self.generate_feeder(cases)
         res = self.run_step(self.predictor, g_vars, feeder)
-        self.session_tracker.set_hinton_data(res[1])
+        self.session_tracker.set_hinton_data(res[1][0])
+        self.session_tracker.set_dendro_data(res[1][1])
 
     # Methods for doing work in given sessions
 
@@ -166,7 +170,7 @@ class GannThread(Thread):
     def run(self):
         self.gann.build_net()
         self.gann.training_session()
-        #self.gann.testing_session()
+        self.gann.testing_session()
         self.gann.mapping_session()
         #self.gann.run()
         #Gann(self.options).run()
