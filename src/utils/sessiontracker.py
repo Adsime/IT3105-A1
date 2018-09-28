@@ -19,8 +19,6 @@ class SessionTracker:
 
         self.hinton = []
         self.dendro = []
-        #self.visualizer = Visualizer()
-        #self.visualizer.show()
         self.grab_vars = []
 
 

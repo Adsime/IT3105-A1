@@ -50,11 +50,12 @@ def viewprep(session, dir='probeview',flush=120,queue=10):
 #        tensorboard --logdir=probeview
 # Then open a Chrome browser and go to site:  localhost:6006
 
-def fireup_tensorboard(logdir):
+def fireup_tensorboard(logdir, logwash=True):
     os.system('tensorboard --logdir='+logdir)
+    if logwash: clear_tensorflow_log(logdir)
 
 def clear_tensorflow_log(logdir):
-    os.system('del ' + logdir +'\events.out.*')
+    os.system('rm ' + logdir +'/events.out.*')
 
 # ***** GENERATING Simple DATA SETS for MACHINE LEARNING *****
 
@@ -300,7 +301,7 @@ def gen_segmented_vector_cases(vectorlen,count,minsegs,maxsegs,poptargs=True):
     for c in range(count):
         numsegs = NPR.randint(minsegs,maxsegs+1)
         v = gen_segmented_vector(vectorlen,numsegs)
-        case = [v,int_to_one_hot(numsegs,maxsegs-minsegs+1)] if poptargs else [v,numsegs]
+        case = [v,int_to_one_hot(numsegs-minsegs,maxsegs-minsegs+1)] if poptargs else [v,numsegs]
         cases.append(case)
     return cases
 
@@ -372,12 +373,15 @@ def simple_scatter_plot(points,alpha=0.5,radius=3):
 # If you do not want to draw box edges, just use 'None' as the 4th color.  A gray-scale combination that
 # mirrors Hinton's original version is ['gray','white','black',None]
 
-def hinton_plot(matrix, axes, maxval=None, maxsize=1, fig=None,trans=True,scale=True, title='Hinton plot',
+def hinton_plot(matrix, maxval=None, maxsize=1, fig=None,trans=True,scale=True, title='Hinton plot',
                 colors=['gray','red','blue','white']):
+    hfig = fig if fig else PLT.figure()
+    hfig.suptitle(title,fontsize=18)
     if trans: matrix = matrix.transpose()
     if maxval == None: maxval = np.abs(matrix).max()
     if not maxsize: maxsize = 2**np.ceil(np.log(maxval)/np.log(2))
 
+    axes = hfig.gca()
     axes.clear()
     axes.patch.set_facecolor(colors[0]);  # This is the background color.  Hinton uses gray
     axes.set_aspect('auto','box')  # Options: ('equal'), ('equal','box'), ('auto'), ('auto','box')..see matplotlib docs
@@ -392,7 +396,8 @@ def hinton_plot(matrix, axes, maxval=None, maxsize=1, fig=None,trans=True,scale=
         blob = PLT.Rectangle(bottom_left, size, size, facecolor=color, edgecolor=colors[3])
         axes.add_patch(blob)
     axes.autoscale_view()
-    return axes
+    PLT.draw()
+    PLT.pause(.001)
 
 # This graphically displays a matrix with color codes for positive, negative, small positive and small negative,
 # with the latter 2 defined by the 'cutoff' argument.  The transpose (trans) arg defaults to
@@ -455,11 +460,10 @@ def gen_dim_reduced_data(feature_array,target_size,eigen_values,eigen_vectors):
 # mode = single, average, complete, centroid, ward, median
 # metric = euclidean, cityblock (manhattan), hamming, cosine, correlation ... (see matplotlib distance.pdist for all 23)
 def dendrogram(features,labels,metric='euclidean',mode='average',ax=None,title='Dendrogram',orient='top',lrot=90.0):
-    #ax = ax if ax else PLT.gca()
+    ax = ax if ax else PLT.gca()
     cluster_history = SCH.linkage(features,method=mode,metric=metric)
-    SCH.dendrogram(cluster_history,orientation=orient,leaf_rotation=lrot)
+    SCH.dendrogram(cluster_history,labels=labels,orientation=orient,leaf_rotation=lrot)
     PLT.tight_layout()
     ax.set_title(title)
     ax.set_ylabel(metric + ' distance')
-    #return ax
-
+    PLT.show()

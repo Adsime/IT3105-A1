@@ -55,7 +55,7 @@ class Gann:
 
     def training_session(self, session=None, continued=False):
         self.current_session = session if session else gen_initialized_session()
-        self.do_training(self.cman.get_training_cases())
+        self.do_training()
         pass
 
     def validation_session(self):
@@ -84,32 +84,13 @@ class Gann:
 
     # Methods for doing work in given sessions
 
-    def do_training(self, cases, continued=False):
-        if not self.current_session:
-            print("No active session detected. Please make sure to call method: training_session before using method: "
-                  "do_training")
-            exit(0)
-        if not continued:
-            pass
-            #self.session_tracker.reset()
-        minibatch_size = self.options.minibatch_size
-        n_cases = len(cases)
-        l_grab_vars = [self.error, self.output]
-        n_batches = math.ceil(n_cases / minibatch_size)
-        batch_start = 0
-        batch_end = self.options.minibatch_size
+    def do_training(self):
+        l_grab_vars = [self.error]
         for i in range(self.options.steps):
-            step = self.global_training_step + i
-            if batch_end >= len(cases):
-                batch_end = batch_end % len(cases)
-                minibatch = cases[batch_start:] + cases[:batch_end]
-            else:
-                minibatch = cases[batch_start:batch_end]
+            minibatch = self.cman.get_n_random_cases(self.options.minibatch_size, self.cman.get_training_cases())
             result = self.run_step(self.trainer, l_grab_vars, self.generate_feeder(minibatch))
             error = result[1][0]
-            self.session_tracker.error_tracker.gather_data(step, error, self, self.cman)
-            batch_start = batch_end
-            batch_end = batch_end + self.options.minibatch_size
+            self.session_tracker.error_tracker.gather_data(i, error, self, self.cman)
 
     def run_step(self, operators, grabbed_vars=None, feed_dict=None):
         return self.current_session.run([operators, grabbed_vars], feed_dict=feed_dict)
@@ -118,26 +99,17 @@ class Gann:
         return [one_hot_to_int(i[1]) for i in cases]
 
     def generate_feeder(self, cases):
-        x, y = np.transpose(cases)
-        return {self.input: x.tolist(), self.target: y.tolist()}
+        x, y = [[row[i] for row in cases] for i in range(len(cases[0]))]
+        return {self.input: x, self.target: y}
 
     def generate_hit_counter(self, cases, k=1):
         correct = tf.nn.in_top_k(tf.cast(self.predictor, tf.float32), self.one_hots_to_ints(cases), k)
         return tf.reduce_sum(tf.cast(correct, tf.int32))
 
-    def consider_validation_testing(self, epoch):
-        v_err = 1 - self.do_validation()
-        self.session_tracker.append_error(epoch, v_err, self.session_tracker.v_err)
-
     def do_validation(self):
         cases = self.cman.get_validation_cases()
         res = self.do_testing(cases)
         return res
-
-    def get_top_k_error(self, cases, k):
-        feeder = self.generate_feeder(cases)
-        res = self.run_step(self.generate_hit_counter(cases, k), [], feeder)
-        return 1 - (res[0]/len(cases))
 
     def do_testing(self, cases):
         feeder = self.generate_feeder(cases)

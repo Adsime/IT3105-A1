@@ -10,12 +10,15 @@ def get_csv_cases(file, scale_func, delimiter=';'):
     file = __file_path__ + file + ".txt"
     with open(file) as csv_file:
         data = csv.reader(csv_file, delimiter=delimiter)
-        x, t = [[], []]
-        for row in data:
-            x.append([float(i) for i in row[:-1]])
-            t.append(int(row[-1]))
+        x, t = split_concat_case(data)
     return to_case_format(x, t, scale_func)
 
+def split_concat_case(cases):
+    x, t = [[], []]
+    for row in cases:
+        x.append([float(i) for i in row[:-1]])
+        t.append(int(row[-1]))
+    return [x, t]
 
 def to_case_format(x_arr, t_arr, scale_func):
     c_count = get_class_count(t_arr)
@@ -73,6 +76,26 @@ def Yeast(scale_func=mean_std):
 def Glass(scale_func=mean_std):
     return get_csv_cases("glass", scale_func, ',')
 
+def Hackers_Choice(scale_func=mean_std):
+    return get_csv_cases("hackers_choice", scale_func, ',')
 
 def Mnist(scale_func=mean_std, dataset='training'):
     return flat_to_case(dataset, scale_func)
+
+def Parity(n_bits):
+    return gen_all_parity_cases(n_bits)
+
+def Symmetry(vlen, case_count):
+    return to_case_format(*split_concat_case(gen_symvect_dataset(vlen, case_count)), scale_func=None)
+
+def One_Hot_Autoencoder(length, floats=False):
+    return gen_all_one_hot_cases(length, floats)
+
+def Dense_Autoencoder(length, size, range=(0,1)):
+    return gen_dense_autoencoder_cases(length, size, range)
+
+def Bit_Counter(num, size):
+    return gen_vector_count_cases(num, size)
+
+def Segment_Counter(feature_count=25, case_count=1000, minsegs=0, maxsegs=8):
+    return gen_segmented_vector_cases(feature_count, case_count, minsegs, maxsegs)
