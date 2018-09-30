@@ -4,20 +4,21 @@ from src.utils.tflowtools import *
 
 class HintonFrame(Frame):
 
-    def __init__(self, session_tracker: SessionTracker, window, location):
+    def __init__(self, session_tracker: SessionTracker, window, location, layers):
         Frame.__init__(self, session_tracker, window, location, "Hinton", "Weight", "Case")
-        self.layer = 0
+        self.layers = layers
+        self.layer = layers[0]
         self.colors = ['gray','red','blue','white']
         self.build()
 
     def update(self, override=False):
-        if self.session_tracker.hinton_updated or override:
+        if self.data_tracker.hinton_updated or override:
             self.clear()
-            data = self.session_tracker.hinton[self.layer]
+            data = self.data_tracker.hinton[self.layer]
             self.update_title()
             self.ax = self.get_hinton_plot(data, self.ax)
             self.draw()
-            self.session_tracker.hinton_updated = False
+            self.data_tracker.hinton_updated = False
 
     def get_hinton_plot(self, data, ax):
         colors = ['gray', 'red', 'blue', 'white']
@@ -53,9 +54,9 @@ class HintonFrame(Frame):
         buttonBox.pack(side=tk.BOTTOM)
 
 
-        self.next_button = tk.Button(master=buttonBox, text="Next", command=lambda : self.change_layer(True))
+        self.next_button = tk.Button(master=buttonBox, text="Next", command=lambda : self.change_layer(next=True))
         self.next_button.pack(side=tk.RIGHT, padx=10)
-        self.prev_button = tk.Button(master=buttonBox, text="Prev", command=lambda : self.change_layer(False))
+        self.prev_button = tk.Button(master=buttonBox, text="Prev", command=lambda : self.change_layer(next=False))
         self.prev_button.pack(side=tk.LEFT, padx=10)
         self.draw()
 
@@ -63,10 +64,12 @@ class HintonFrame(Frame):
         self.set_title("Hinton (Layer: " + self.layer.__str__() + ")")
 
     def change_layer(self, next=True):
-        data = self.session_tracker.hinton
-        if next and self.layer + 1 < len(data):
-            self.layer += 1
-        elif not next and self.layer > 0:
-            self.layer -= 1
+        currentIndex = self.layers.index(self.layer)
+        if next and currentIndex + 1 < len(self.layers):
+            self.layer = self.layers[currentIndex + 1]
+        elif not next and currentIndex > 0:
+            self.layer = self.layers[currentIndex - 1]
+        else:
+            return
         self.update(True)
 

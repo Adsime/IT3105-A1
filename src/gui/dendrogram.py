@@ -7,13 +7,13 @@ class DendrogramFrame(Frame):
         self.build()
 
     def update(self, override=False):
-        if self.session_tracker.dendro_updated:
-            data = self.session_tracker.dendro
+        if self.data_tracker.dendro_updated:
+            data = self.data_tracker.dendro
             labels = []
             self.clear()
             self.dendrogram(data[0])
             self.draw()
-            self.session_tracker.error = False
+            self.data_tracker.dendro_updated = False
 
     def dendrogram(self, features, mode='average', metric='euclidean', orient='top', lrot=90.0):
         cluster_history = sch.linkage(features, method=mode, metric=metric)

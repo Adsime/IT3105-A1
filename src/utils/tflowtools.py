@@ -55,7 +55,7 @@ def fireup_tensorboard(logdir, logwash=True):
     if logwash: clear_tensorflow_log(logdir)
 
 def clear_tensorflow_log(logdir):
-    os.system('rm ' + logdir +'/events.out.*')
+    os.system('del ' + logdir + r'\events.out.*')
 
 # ***** GENERATING Simple DATA SETS for MACHINE LEARNING *****
 

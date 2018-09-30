@@ -1,14 +1,14 @@
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from src.utils.sessiontracker import SessionTracker, ErrorTacker
+from src.utils.sessiontracker import SessionTracker, ErrorTracker
 import tkinter as tk
 import matplotlib.pyplot as plt
 import numpy as np
 
 class Frame():
 
-    def __init__(self, session_tracker: SessionTracker, window, location, title, xlabel, ylabel):
-        self.session_tracker = session_tracker
+    def __init__(self, data_tracker, window, location, title, xlabel, ylabel):
+        self.data_tracker = data_tracker
         self.box = tk.Frame(master=window)
         self.window = window
         self.box.grid(row=location[0], column=location[1])

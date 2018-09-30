@@ -3,13 +3,13 @@ from src.gui.frame import *
 
 class ErrorFrame(Frame):
 
-    def __init__(self, session_tracker: SessionTracker, window, location):
-        Frame.__init__(self, session_tracker, window, location, "Error plot", "Minibatch", "Error")
+    def __init__(self, error_tracker: ErrorTracker, window, location):
+        Frame.__init__(self, error_tracker, window, location, "Error plot", "Minibatch", "Error")
         self.build()
 
     def update(self, override=False):
-        if self.session_tracker.error_tracker.updated:
-            data = self.session_tracker.error_tracker.history
+        if self.data_tracker.updated:
+            data = self.data_tracker.history
             labels = []
             self.clear()
             for set in data:
@@ -19,7 +19,7 @@ class ErrorFrame(Frame):
                 labels.append(set)
                 self.ax.legend(labels)
             self.draw()
-            self.session_tracker.error_tracker.updated = False
+            self.data_tracker.updated = False
 
     def build(self):
         fig = Figure()

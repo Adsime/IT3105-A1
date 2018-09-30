@@ -26,10 +26,19 @@ params = {
     'session_tracker': session_tracker
 }
 
+# Options used throughout the program
 options = Options(**params)
+
+# Neural net init and run
 gann = G(options)
-GT(gann)
-Visualizer(session_tracker)
+GT(gann.generate_full_run_sequence())
+
+# Visualization tool
+v = Visualizer(session_tracker, options)
+v.insert_error_frame()
+v.insert_dendro_frame()
+v.insert_hinton_frame(layers='all')
+v.start()
 
 #autoex()
 

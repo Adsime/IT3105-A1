@@ -13,7 +13,7 @@ class SessionTracker:
 
 
     def reset(self):
-        self.error_tracker: ErrorTacker = ErrorTacker(1000)
+        self.error_tracker: ErrorTracker = ErrorTracker(1000)
         self.hinton_updated = False
         self.dendro_updated = False
 
@@ -21,22 +21,19 @@ class SessionTracker:
         self.dendro = []
         self.grab_vars = []
 
-
-    def append_grab_variable(self, variable):
-        self.grab_vars.append(variable)
-
-    def get_grab_variables(self):
-        return self.grab_vars
-
     def set_hinton_data(self, data):
         self.hinton = data
         self.hinton_updated = True
 
-    def set_dendro_data(self, data):
-        self.dendro = data
+    def set_dendro_data(self, data, targets):
+
+        self.dendro = [data, targets]
         self.dendro_updated = True
 
-class ErrorTacker:
+    def gather_data(self, step, t_error, gann, cman: CustomCaseManager):
+        self.error_tracker.gather_data(step, t_error, gann, cman)
+
+class ErrorTracker:
     t_err = "Training error"
     v_err = "validation error"
     top_k_err = "top 1 error"

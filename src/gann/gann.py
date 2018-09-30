@@ -79,8 +79,10 @@ class Gann:
         cases = self.cman.get_n_random_cases(10, self.cman.get_testing_cases())
         feeder = self.generate_feeder(cases)
         res = self.run_step(self.predictor, g_vars, feeder)
+        targets = self.one_hots_to_ints(cases)
         self.session_tracker.set_hinton_data(res[1][0])
-        self.session_tracker.set_dendro_data(res[1][1])
+        print(res[1][1])
+        self.session_tracker.set_dendro_data(res[1][1], targets)
 
     # Methods for doing work in given sessions
 
@@ -90,7 +92,7 @@ class Gann:
             minibatch = self.cman.get_n_random_cases(self.options.minibatch_size, self.cman.get_training_cases())
             result = self.run_step(self.trainer, l_grab_vars, self.generate_feeder(minibatch))
             error = result[1][0]
-            self.session_tracker.error_tracker.gather_data(i, error, self, self.cman)
+            self.session_tracker.gather_data(i, error, self, self.cman)
 
     def run_step(self, operators, grabbed_vars=None, feed_dict=None):
         return self.current_session.run([operators, grabbed_vars], feed_dict=feed_dict)
@@ -99,6 +101,7 @@ class Gann:
         return [one_hot_to_int(i[1]) for i in cases]
 
     def generate_feeder(self, cases):
+        # Transpose cases. Avoiding numpy as the format of NxN matrices cause issues.
         x, y = [[row[i] for row in cases] for i in range(len(cases[0]))]
         return {self.input: x, self.target: y}
 
@@ -116,33 +119,20 @@ class Gann:
         res = self.run_step(self.generate_hit_counter(cases), [], feeder)
         return 1 - (res[0]/len(cases))
 
-
-    # Main methods. Called by user.
-
-    def run(self):
-        # Build ANN
-        self.build_net()
-        self.training_session()
-        self.testing_session()
-        #visualize(self.session_tracker.history)
-        #close_session(self.current_session)
+    def generate_full_run_sequence(self):
+        return [self.build_net, self.training_session, self.testing_session, self.mapping_session]
 
 
 class GannThread(Thread):
 
-    def __init__(self, gann: Gann):
+    def __init__(self, methods):
         Thread.__init__(self)
-        #self.methods = methods
-        self.gann = gann
+        self.methods = methods
         self.start()
 
     def run(self):
-        self.gann.build_net()
-        self.gann.training_session()
-        self.gann.testing_session()
-        self.gann.mapping_session()
-        #self.gann.run()
-        #Gann(self.options).run()
+        for method in self.methods:
+            method()
         return
 
 
