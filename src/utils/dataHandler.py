@@ -64,38 +64,48 @@ def direct_scale(cases):
 def get_data(data_name, scale_func=mean_std):
     return data_sources[data_name](scale_func)
 
+class DataSets():
 
-def Wine(scale_func=mean_std):
-    return get_csv_cases('wine', scale_func, ';')
+    @staticmethod
+    def Wine(scale_func=mean_std):
+        return get_csv_cases('wine', scale_func, ';')
 
+    @staticmethod
+    def Yeast(scale_func=mean_std):
+        return get_csv_cases('yeast', scale_func, ',')
 
-def Yeast(scale_func=mean_std):
-    return get_csv_cases('yeast', scale_func, ',')
+    @staticmethod
+    def Glass(scale_func=mean_std):
+        return get_csv_cases("glass", scale_func, ',')
 
+    @staticmethod
+    def Hackers_Choice(scale_func=mean_std):
+        return get_csv_cases("hackers_choice", scale_func, ',')
 
-def Glass(scale_func=mean_std):
-    return get_csv_cases("glass", scale_func, ',')
+    @staticmethod
+    def Mnist(scale_func=mean_std, dataset='training'):
+        return flat_to_case(dataset, scale_func)
 
-def Hackers_Choice(scale_func=mean_std):
-    return get_csv_cases("hackers_choice", scale_func, ',')
+    @staticmethod
+    def Parity(n_bits):
+        return gen_all_parity_cases(n_bits)
 
-def Mnist(scale_func=mean_std, dataset='training'):
-    return flat_to_case(dataset, scale_func)
+    @staticmethod
+    def Symmetry(vlen, case_count):
+        return to_case_format(*split_concat_case(gen_symvect_dataset(vlen, case_count)), scale_func=None)
 
-def Parity(n_bits):
-    return gen_all_parity_cases(n_bits)
+    @staticmethod
+    def One_Hot_Autoencoder(length, floats=False):
+        return gen_all_one_hot_cases(length, floats)
 
-def Symmetry(vlen, case_count):
-    return to_case_format(*split_concat_case(gen_symvect_dataset(vlen, case_count)), scale_func=None)
+    @staticmethod
+    def Dense_Autoencoder(length, size, range=(0,1)):
+        return gen_dense_autoencoder_cases(length, size, range)
 
-def One_Hot_Autoencoder(length, floats=False):
-    return gen_all_one_hot_cases(length, floats)
+    @staticmethod
+    def Bit_Counter(num, size):
+        return gen_vector_count_cases(num, size)
 
-def Dense_Autoencoder(length, size, range=(0,1)):
-    return gen_dense_autoencoder_cases(length, size, range)
-
-def Bit_Counter(num, size):
-    return gen_vector_count_cases(num, size)
-
-def Segment_Counter(feature_count=25, case_count=1000, minsegs=0, maxsegs=8):
-    return gen_segmented_vector_cases(feature_count, case_count, minsegs, maxsegs)
+    @staticmethod
+    def Segment_Counter(feature_count=25, case_count=1000, minsegs=0, maxsegs=8):
+        return gen_segmented_vector_cases(feature_count, case_count, minsegs, maxsegs)

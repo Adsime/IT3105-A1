@@ -1,26 +1,31 @@
 from src.gui.frame import *
+from src.gui.layer_change_frame import LayerChangeFrame
 from src.utils.tflowtools import *
 
 
-class HintonFrame(Frame):
+class HintonFrame(LayerChangeFrame):
 
-    def __init__(self, session_tracker: SessionTracker, window, location, layers):
-        Frame.__init__(self, session_tracker, window, location, "Hinton", "Weight", "Case")
-        self.layers = layers
-        self.layer = layers[0]
+    def __init__(self, session_tracker: SessionTracker, window, location, layers, title, xlabel, ylabel,
+                 data_func, *updated):
+        LayerChangeFrame.__init__(self, session_tracker, window, location, layers, title, xlabel, ylabel)
+        self.updated = updated
+        self.data_func = data_func
+        self.name = title
         self.colors = ['gray','red','blue','white']
         self.build()
 
     def update(self, override=False):
-        if self.data_tracker.hinton_updated or override:
+        data = self.data_func()
+        if (self.updated or override) and len(data) > 0:
             self.clear()
-            data = self.data_tracker.hinton[self.layer]
-            self.update_title()
+            data = data[self.layer]
+            self.update_title(self.name)
             self.ax = self.get_hinton_plot(data, self.ax)
             self.draw()
-            self.data_tracker.hinton_updated = False
+            self.updated = False
 
     def get_hinton_plot(self, data, ax):
+        data = np.array(data)
         colors = ['gray', 'red', 'blue', 'white']
         data = data.transpose()
         maxval = 1
@@ -43,33 +48,5 @@ class HintonFrame(Frame):
         ax.autoscale_view()
         return ax
 
-    def build(self):
-        fig = Figure()
-        self.ax = fig.gca()
 
-        self.canvas = FigureCanvasTkAgg(fig, master=self.box)
-        self.canvas.get_tk_widget().pack(side=tk.TOP)
-
-        buttonBox = tk.Frame(master=self.box)
-        buttonBox.pack(side=tk.BOTTOM)
-
-
-        self.next_button = tk.Button(master=buttonBox, text="Next", command=lambda : self.change_layer(next=True))
-        self.next_button.pack(side=tk.RIGHT, padx=10)
-        self.prev_button = tk.Button(master=buttonBox, text="Prev", command=lambda : self.change_layer(next=False))
-        self.prev_button.pack(side=tk.LEFT, padx=10)
-        self.draw()
-
-    def update_title(self):
-        self.set_title("Hinton (Layer: " + self.layer.__str__() + ")")
-
-    def change_layer(self, next=True):
-        currentIndex = self.layers.index(self.layer)
-        if next and currentIndex + 1 < len(self.layers):
-            self.layer = self.layers[currentIndex + 1]
-        elif not next and currentIndex > 0:
-            self.layer = self.layers[currentIndex - 1]
-        else:
-            return
-        self.update(True)
 

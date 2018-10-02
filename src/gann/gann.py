@@ -14,6 +14,7 @@ class Gann:
         self.net_dims = options.net_dims
         self.layers = []
         self.session_tracker = options.session_tracker
+        self.session_tracker.set_options(options)
         self.global_training_step = 0
         self.cman = self.options.case_manager
         self.optimizer = options.optimizer
@@ -48,6 +49,7 @@ class Gann:
 
     def set_learning_options(self):
         self.error = self.options.cost_function(self.target, self.output)
+        self.t_err = tf.losses.mean_squared_error(self.target, self.output)
         self.predictor = self.output  # Simple prediction runs will request the value of output neurons
         self.trainer = self.optimizer.minimize(self.error, name='Backprop')
 
@@ -63,36 +65,47 @@ class Gann:
 
     def testing_session(self):
         cases = self.cman.get_testing_cases()
+        if not len(cases):
+            return
         res = self.do_testing(cases)
-        print("Test result: " + str(round(res * 100, 2)) + "%")
+        print("Test result: " + str(round(1 - res, 1) * 100) + "%")
         cases = self.cman.get_training_cases()
         res = self.do_testing(cases)
-        print("Training result: " + str(round(res * 100, 2)) + "%")
+        print("Training result: " + str(round(1 - res, 2) * 100) + "%")
 
     def mapping_session(self):
         weights = []
-        outputs = []
+        biases = []
+        outputs = [self.input]
         for layer in self.layers:
             weights.append(layer.weights)
-            outputs.append(layer.output)
-        g_vars = [weights, outputs]
-        cases = self.cman.get_n_random_cases(10, self.cman.get_testing_cases())
+            biases.append([layer.biases])
+            if not layer == self.layers[-1]:
+                outputs.append(layer.output)
+        outputs.append(self.output)
+        g_vars = [weights, biases, outputs]
+        cases = self.cman.get_n_random_cases(self.options.map_case_count, self.options.map_case_func())
         feeder = self.generate_feeder(cases)
         res = self.run_step(self.predictor, g_vars, feeder)
         targets = self.one_hots_to_ints(cases)
-        self.session_tracker.set_hinton_data(res[1][0])
-        print(res[1][1])
-        self.session_tracker.set_dendro_data(res[1][1], targets)
+        self.session_tracker.set_weight_data(res[1][0])
+        self.session_tracker.set_bias_data(res[1][1])
+        self.session_tracker.set_output_data(res[1][2])
+        self.session_tracker.set_dendro_data(res[1][2], targets)
 
     # Methods for doing work in given sessions
 
     def do_training(self):
-        l_grab_vars = [self.error]
+        lowest = 1
+        l_grab_vars = [self.t_err]
         for i in range(self.options.steps):
             minibatch = self.cman.get_n_random_cases(self.options.minibatch_size, self.cman.get_training_cases())
-            result = self.run_step(self.trainer, l_grab_vars, self.generate_feeder(minibatch))
-            error = result[1][0]
+            res = self.run_step(self.trainer, l_grab_vars, self.generate_feeder(minibatch))
+            error = res[1][0]
+            lowest = error if error < lowest else lowest
             self.session_tracker.gather_data(i, error, self, self.cman)
+        print("Lowest MSE: " + str(lowest))
+        print("Step " + str(self.options.steps) + " MSE: " + str(error))
 
     def run_step(self, operators, grabbed_vars=None, feed_dict=None):
         return self.current_session.run([operators, grabbed_vars], feed_dict=feed_dict)
