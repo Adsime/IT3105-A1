@@ -22,7 +22,7 @@ class GannLayer:
         if w_range == 'scaled':
             w = np.random.uniform(0, 0, size=(self.in_count, self.out_count))
             b = np.random.uniform(0, 0, size=self.out_count)
-            weight = 1/(len(w) * len(w[0]))
+            weight = 1/self.in_count
             for i, row in enumerate(w):
                 for j, val in enumerate(row):
                     w[i][j] = weight

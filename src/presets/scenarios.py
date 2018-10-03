@@ -262,4 +262,31 @@ class Scenarios:
         # Options used throughout the program
         return Options(**params)
 
+    @staticmethod
+    def get_custom_options(net_dims, h_activation_function, o_activation_function, cost_function,
+                           learning_rate, weight_range, optimizer, minibatch_size,
+                           steps, vint, session_tracker, case_manager, map_case_count, map_case_func):
+        params = {
+            'net_dims': calc_net_dims(case_manager.get_training_cases()[0], net_dims),
+            'h_activation_function': h_activation_function,
+            'o_activation_function': o_activation_function,
+            'cost_function': cost_function,
+            'learning_rate': learning_rate,
+            'weight_range': weight_range,
+            'optimizer': optimizer,
+            'case_manager': case_manager,
+            'minibatch_size': minibatch_size,
+            'steps': steps,
+            'vint': vint,
+            'session_tracker': session_tracker,
+
+            # MAP options
+            'map_case_count': map_case_count,
+            'map_case_func': map_case_func
+        }
+
+        return Options(**params)
+
+
+
 

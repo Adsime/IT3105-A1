@@ -3,7 +3,7 @@ from src.gui.layer_change_frame import LayerChangeFrame
 from src.utils.tflowtools import *
 
 
-class HintonFrame(LayerChangeFrame):
+class QuantitativeFrame(LayerChangeFrame):
 
     def __init__(self, *updated, session_tracker: SessionTracker, window, location, layers, title, xlabel, ylabel,
                  data_func):
@@ -20,11 +20,11 @@ class HintonFrame(LayerChangeFrame):
             self.clear()
             data = data[self.layer]
             self.update_title(self.name)
-            self.ax = self.get_hinton_plot(data, self.ax)
+            self.ax = self.get_quantitative_plot(data, self.ax)
             self.draw()
             self.updated = False
 
-    def get_hinton_plot(self, data, ax):
+    def get_quantitative_plot(self, data, ax, cutoff=0.1, tsize=12, tform='{:.3f}'):
         data = np.array(data)
         colors = ['gray', 'red', 'blue', 'white']
         data = data.transpose()
@@ -40,11 +40,18 @@ class HintonFrame(LayerChangeFrame):
 
         ymax = (data.shape[1] - 1) * maxsize
         for (x, y), val in np.ndenumerate(data):
-            color = colors[1] if val > 0 else colors[2]  # Hinton uses white = pos, black = neg
-            size = max(0.01, np.sqrt(min(maxsize, maxsize * np.abs(val) / maxval)))
-            bottom_left = [x - size / 2, (ymax - y) - size / 2]  # (ymax - y) to invert: row 0 at TOP of diagram
-            blob = PLT.Rectangle(bottom_left, size, size, facecolor=color, edgecolor=colors[3])
+            if val > 0:
+                color = colors[0] if val > cutoff else colors[1]
+            else:
+                color = colors[3] if val < -cutoff else colors[2]
+            botleft = [x - 1 / 2, (ymax - y) - 1 / 2]  # (ymax - y) to invert: row 0 at TOP of diagram
+            # This is a hack, but I seem to need to add these blank blob rectangles first, and then I can add the text
+            # boxes.  If I omit the blobs, I get just one plotted textbox...grrrrrr.
+            blob = PLT.Rectangle(botleft, 1, 1, facecolor='white', edgecolor='white')
             ax.add_patch(blob)
+            ax.text(botleft[0] + 0.5, botleft[1] + 0.5, tform.format(val),
+                      bbox=dict(facecolor=color, alpha=0.5, edgecolor='white'), ha='center', va='center',
+                      color='black', size=tsize)
         ax.autoscale_view()
         return ax
 
