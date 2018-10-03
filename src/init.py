@@ -8,40 +8,6 @@ from src.presets.scenarios import Scenarios
 session_tracker = SessionTracker()
 
 """
-cases = DataSets.Parity(10)
-cases = DataSets.Mnist()
-lrate = 0.001
-
-cman = CustomCaseManager(cases, None, cfrac=1, vfrac=0.1, tfrac=0.1)
-
-params = {
-    'net_dims': [len(cases[0][0]), 80, 80, len(cases[0][1])],
-    'h_activation_function': tf.nn.relu,
-    'o_activation_function': tf.nn.softmax,
-    'cost_function': tf.losses.softmax_cross_entropy,
-    'learning_rate': lrate,
-    'weight_range': [-.1, .1],
-    'optimizer': tf.train.AdamOptimizer(lrate, 0.9, 0.999),
-    #'optimizer': tf.train.AdagradOptimizer(lrate, 0.001),
-    #'optimizer': tf.train.GradientDescentOptimizer(lrate),
-    'case_manager': cman,
-    'minibatch_size': 50,
-    'steps': 1000,
-    'vint': 10,
-    'session_tracker': session_tracker,
-
-    # MAP options
-    'map_case_count': 10,
-    'map_case_func': cman.get_testing_cases
-}
-
-# Options used throughout the program
-options = Options(**params)
-"""
-
-# Neural net init and run
-#gann = G(options)
-
 cases = DataSets.Yeast()
 lrate = 0.001
 optimizer = tf.train.AdagradOptimizer(lrate)
@@ -49,8 +15,10 @@ cman = CustomCaseManager(cases, None, 1, .1, .1)
 options = Scenarios.get_custom_options([80, 80], tf.nn.relu, tf.nn.softmax, tf.losses.softmax_cross_entropy,
                                        lrate, [-.5, .5], optimizer, 10, 1000, 10, session_tracker, cman, 10,
                                        cman.get_testing_cases)
+"""
 
-#options = Scenarios.get_yeast_options(session_tracker)
+
+options = Scenarios.get_mnist_options(session_tracker)
 gann = G(options)
 GT(gann.generate_full_run_sequence())
 

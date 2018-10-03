@@ -1,7 +1,6 @@
 import csv
-from src.data.mnist_basics import *
+from src.utils.mnist_basics import *
 from src.utils.tflowtools import *
-import time
 
 __file_path__ = 'data/'
 
